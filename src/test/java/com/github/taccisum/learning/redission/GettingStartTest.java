@@ -2,10 +2,12 @@ package com.github.taccisum.learning.redission;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.redisson.api.RAtomicLong;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
@@ -14,6 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
+@ActiveProfiles("getting-start")
 public class GettingStartTest {
     @Autowired
     private RedissonClient redissonClient;
@@ -25,5 +28,14 @@ public class GettingStartTest {
         }
         RKeys keys = redissonClient.getKeys();
         keys.getKeys().forEach(k -> System.out.println(k));
+    }
+
+    @Test
+    public void async() throws Exception {
+        RAtomicLong atomicLong = redissonClient.getAtomicLong("atomicLong");
+        atomicLong.incrementAndGetAsync()
+                .whenComplete((res, e) -> {
+                    System.out.println(res);
+                });
     }
 }
