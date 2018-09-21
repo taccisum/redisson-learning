@@ -3,5 +3,3 @@ spring:
     redisson:
       config: classpath:redisson.yaml
 
-debug: true
-
