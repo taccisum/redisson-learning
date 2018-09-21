@@ -41,9 +41,6 @@ public class GettingStartTest {
 
     @Test
     public void keys() throws Exception {
-        if (redissonClient.isShutdown()) {
-            System.out.println("redission is shutdown now");
-        }
         RKeys keys = redissonClient.getKeys();
         keys.getKeys().forEach(k -> System.out.println(k));
     }
