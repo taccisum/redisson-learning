@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since 2018/9/21
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Application.class)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("getting-start")
 @ImportAutoConfiguration(GettingStartTest.Config.class)
 public class GettingStartTest {
