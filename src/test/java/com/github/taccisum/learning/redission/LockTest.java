@@ -89,6 +89,7 @@ public class LockTest {
 //                right
                 while (count.get() < MAX) {
                     RLock lock = redissonClient.getLock("counter");
+                    //noinspection Duplicates
                     try {
                         lock.lock();
                         if (count.get() < MAX) {
