@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import redis.embedded.RedisServer;
@@ -104,6 +103,52 @@ public class LockTest {
         executorService.shutdown();
         executorService.awaitTermination(10, TimeUnit.SECONDS);
         assertThat(count.get()).isEqualTo(MAX);
+    }
+
+    @Test
+    public void counter1() throws Exception {
+        RAtomicLong count1 = redissonClient.getAtomicLong("count_1");
+        RAtomicLong count2 = redissonClient.getAtomicLong("count_2");
+        assertThat(count1.get()).isEqualTo(0);
+        assertThat(count2.get()).isEqualTo(0);
+        ExecutorService executorService = Executors.newFixedThreadPool(20);
+        final int MAX = 5000;
+        for (int i = 0; i < 10; i++) {
+            executorService.execute(() -> {
+                while (count1.get() < MAX) {
+                    RLock lock = redissonClient.getLock("counter_1");
+                    //noinspection Duplicates
+                    try {
+                        lock.lock();
+                        if (count1.get() < MAX) {
+                            count1.getAndIncrement();
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            });
+        }
+        for (int i = 0; i < 10; i++) {
+            executorService.execute(() -> {
+                while (count2.get() < MAX) {
+                    RLock lock = redissonClient.getLock("counter_2");
+                    //noinspection Duplicates
+                    try {
+                        lock.lock();
+                        if (count2.get() < MAX) {
+                            count2.getAndIncrement();
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            });
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.SECONDS);
+        assertThat(count1.get()).isEqualTo(MAX);
+        assertThat(count2.get()).isEqualTo(MAX);
     }
 
     @Test
