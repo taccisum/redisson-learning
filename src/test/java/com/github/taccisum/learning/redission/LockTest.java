@@ -78,16 +78,16 @@ public class LockTest {
         RAtomicLong count = redissonClient.getAtomicLong("count");
         assertThat(count.get()).isEqualTo(0);
         ExecutorService executorService = Executors.newFixedThreadPool(10);
-        final int MAX = 5000;
+        final int MAX = 1000;
         for (int i = 0; i < 10; i++) {
             executorService.execute(() -> {
 //                error
-//                while (count.get() < MAX) {
+//                for (int j = 0; j < 600; j++) {
 //                    count.getAndIncrement();
 //                }
 
 //                right
-                while (count.get() < MAX) {
+                for (int j = 0; j < 500; j++) {
                     RLock lock = redissonClient.getLock("counter");
                     //noinspection Duplicates
                     try {

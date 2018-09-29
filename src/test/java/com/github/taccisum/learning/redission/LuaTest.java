@@ -80,7 +80,7 @@ public class LuaTest {
         count.set(0L);
         assertThat(count.get()).isEqualTo(0);
         ExecutorService executorService = Executors.newFixedThreadPool(10);
-        final int MAX = 5000;
+        final int MAX = 1000;
         for (int i = 0; i < 10; i++) {
             executorService.execute(() -> {
                 for (int j = 0; j < 2000; j++) {
