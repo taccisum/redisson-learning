@@ -1,8 +1,10 @@
 package com.github.taccisum.learning.redission;
 
 import org.assertj.core.util.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.redisson.api.RAtomicLong;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.spring.starter.RedissonAutoConfiguration;
@@ -23,6 +25,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,6 +66,31 @@ public class LuaTest {
         redissonClient.getBucket("tac").set(1);
         assertThat(redissonClient.getScript().<Long>eval(RScript.Mode.READ_ONLY, lua("test_script1"), RScript.ReturnType.INTEGER, Lists.newArrayList("tac"), true)).isEqualTo(2);
         assertThat(redissonClient.getScript().<Integer>eval(RScript.Mode.READ_ONLY, lua("test_script1"), RScript.ReturnType.INTEGER, Lists.newArrayList("tac"), false)).isEqualTo(1);
+    }
+
+    @Test
+    @Ignore
+    public void loadScript() throws Exception {
+    }
+
+    @Test
+    public void counterViaLuaScript() throws Exception {
+        String script = lua("counter_via_lua");
+        RAtomicLong count = redissonClient.getAtomicLong("count");
+        count.set(0L);
+        assertThat(count.get()).isEqualTo(0);
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        final int MAX = 5000;
+        for (int i = 0; i < 10; i++) {
+            executorService.execute(() -> {
+                for (int j = 0; j < 2000; j++) {
+                    boolean success = redissonClient.getScript().eval(RScript.Mode.READ_WRITE, script, RScript.ReturnType.BOOLEAN, Lists.newArrayList("count"), MAX);
+                }
+            });
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.SECONDS);
+        assertThat(count.get()).isEqualTo(MAX);
     }
 
     static String lua(String fileName) throws IOException {
