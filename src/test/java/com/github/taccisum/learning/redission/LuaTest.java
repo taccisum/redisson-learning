@@ -76,6 +76,8 @@ public class LuaTest {
     @Test
     public void counterViaLuaScript() throws Exception {
         String script = lua("counter_via_lua");
+        RScript rscript = redissonClient.getScript();
+        String sha = rscript.scriptLoad(script);
         RAtomicLong count = redissonClient.getAtomicLong("count");
         count.set(0L);
         assertThat(count.get()).isEqualTo(0);
@@ -84,7 +86,7 @@ public class LuaTest {
         for (int i = 0; i < 10; i++) {
             executorService.execute(() -> {
                 for (int j = 0; j < 2000; j++) {
-                    boolean success = redissonClient.getScript().eval(RScript.Mode.READ_WRITE, script, RScript.ReturnType.BOOLEAN, Lists.newArrayList("count"), MAX);
+                    boolean success = rscript.evalSha(RScript.Mode.READ_WRITE, sha, RScript.ReturnType.BOOLEAN, Lists.newArrayList("count"), MAX);
                 }
             });
         }
